@@ -26,6 +26,6 @@ def start_action(action_list, action_args = {}, web = False):
 			action_dict[action].join()
 
 if __name__ == "__main__":
-	logging.basicConfig()
+	logging.basicConfig(filename='res.log')
 	actionList = ['PrintSinaL2']
 	start_action(actionList)

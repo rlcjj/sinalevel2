@@ -5,8 +5,8 @@ import util
 from Producer import Producer
 from Functions import *
 from Event import Event
-import connection as CON
-import const as C
+from connection import *
+from const import *
 
 from datetime import datetime
 import time
@@ -44,19 +44,17 @@ class SinaLevel2WSProducer(Producer):
 	def get_ws_token(self,qlist):
 		loop = trollius.get_event_loop()
 		async_req = loop.run_in_executor(None, functools.partial( self.sina.session.get,
-			URL_WSKT_TOKEN
-		,	params 	=	PARAM_WSKT_TOKEN(ip=self.ip,qlist=qlist, hq = self.hq)
-		,	headers =	HEADERS_WSKT_TOKEN()
-		,	timeout =	5
-		) )
-		for req in async_req:
-			yield req
+			URL_WSKT_TOKEN,
+			params 	=	PARAM_WSKT_TOKEN(ip=self.ip,qlist=qlist, hq = self.hq),
+			headers =	HEADERS_WSKT_TOKEN(),
+			timeout =	5
+		))
+		yield trollius.From(async_req)
 		# self.logger.info(req.text)
 		response = re.findall(r'(\{.*\})',req.text)[0]
 		response = json.loads( response.replace(',',',"').replace('{','{"').replace(':','":') )
 		# gc.collect()
-		yield response
-		return
+		raise trollius.Return(response)
 
 	# 2cn_是3秒一条的Level2 10档行情
 	# 2cn_symbol_0,2cn_symbol_1是逐笔数据
@@ -233,4 +231,4 @@ class SinaLevel2WSProducer(Producer):
 		websocketCreator.join()
 
 if __name__ == "__main__":
-	p = SinaLevel2WSProducer()
+	p = SinaLevel2WSProducer({'producer_name': 'PrintSinaL2.SinaLevel2-quotation', 'name': 'SinaLevel2WS'})

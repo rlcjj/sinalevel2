@@ -65,6 +65,8 @@ class Action(threading.Thread):
         self._active = False        # _active表示：是否处理数据
         self._running = False        # _running表示：( Deprecated ) Action是否开启，这个flag无用
         self.mutex = threading.Lock()
+
+    def _init(self):
         self._auto_load_producers()
         # 开启定时打印消息队列堆积数据量的线程
         t = threading.Thread(target=self.log_queue)
@@ -196,4 +198,5 @@ class Action(threading.Thread):
         return
 
 if __name__ == "__main__":
-    P(name="SinaLevel2WS",producer_name="PrintSinaL2.SinaLevel2-quotation")
+    logging.basicConfig()
+    A("PrintSinaL2")
