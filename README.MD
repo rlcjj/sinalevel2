@@ -8,9 +8,7 @@ sinalevel2是原dHydra项目中获取新浪行情数据针对Python2.x适配的�
 
 使用此项目需要安装python2.7版本的websockets包，这个也是自己将原来的websockets包针对python2.7做的适配：
 
-[https://github.com/evanzd/websockets](https://github.com/evanzd/websockets)
-
-安装时运行`python setup.py install`即可，也可以单独执行build操作后放在此项目目录下调用。
+    pip install git+git://github.com/evanzd/websockets
 
 此外其他的依赖包括：
 
