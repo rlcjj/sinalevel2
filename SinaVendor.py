@@ -203,8 +203,7 @@ class SinaVendor(Vendor):
     @trollius.coroutine
     def get_quote_task(self, symbolListSlice, dataframe):
         for symbolList in symbolListSlice:
-            for quote in self.get_quote_coroutine(symbols = symbolList, dataframe=dataframe):
-            	yield quote
+            quote = yield trollius.From(self.get_quote_coroutine(symbols = symbolList, dataframe=dataframe))
             if self.quote is None:
                 self.quote = quote
             else:
@@ -231,8 +230,7 @@ class SinaVendor(Vendor):
                 ,    URL_QUOTATION(symbols)
                 ,    timeout = 0.1
                 ) )
-                for quote in async_req:
-                	yield quote
+                quote = yield trollius.From(async_req)
                 retry = False
             except:
                 pass
@@ -246,8 +244,7 @@ class SinaVendor(Vendor):
             quote = DataFrame( quote, columns = SINA_QUOTE_COLUMNS )
             quote["symbol"] = symbolList
             quote["time"] = datetime.strptime( quote.iloc[0]["date"] + " " + quote.iloc[0]["time"] , '%Y-%m-%d %H:%M:%S')
-        yield quote
-        return
+        raise trollius.Return(quote)
 
     # 新浪获取当前全部股票的接口
     # 如果 dataframe = True， 则返回panda.DataFrame格式，

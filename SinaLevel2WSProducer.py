@@ -31,6 +31,9 @@ class SinaLevel2WSProducer(Producer):
 		# 登录模块在V('Sina')中
 		self.sina = V('Sina')
 		self.is_login = self.login()
+		if not self.is_login:
+			self.logger.error(u'登录失败，请核对账号和密码')
+			sys.exit(-1)
 		if symbols is None:
 			self.symbols = self.sina.get_symbols()
 		else:
@@ -49,7 +52,7 @@ class SinaLevel2WSProducer(Producer):
 			headers =	HEADERS_WSKT_TOKEN(),
 			timeout =	5
 		))
-		yield trollius.From(async_req)
+		req = yield trollius.From(async_req)
 		# self.logger.info(req.text)
 		response = re.findall(r'(\{.*\})',req.text)[0]
 		response = json.loads( response.replace(',',',"').replace('{','{"').replace(':','":') )
@@ -84,8 +87,7 @@ class SinaLevel2WSProducer(Producer):
 		retry = True
 		while retry:
 			try:
-				for response in self.get_ws_token(qlist):
-					yield response
+				response = yield trollius.From(self.get_ws_token(qlist))
 				if response["msg_code"] == 1:
 					token = response["result"]
 					self.logger.info(u"成功获取到token, symbolList = {}".format(symbolList) )
@@ -105,8 +107,7 @@ class SinaLevel2WSProducer(Producer):
 
 		while True:	# 建立websocket连接
 			try:
-				for ws in websockets.connect(url_wss):
-					yield ws
+				ws = yield trollius.From(websockets.connect(url_wss))
 				self.websockets[ symbolList[0] ] = dict()
 				self.websockets[ symbolList[0] ]["ws"] = ws
 				self.websockets[ symbolList[0] ]["qlist"] = qlist
@@ -120,8 +121,7 @@ class SinaLevel2WSProducer(Producer):
 
 		while self._active:
 			try:
-				for message in ws.recv():
-					yield message
+				message = yield trollius.From(ws.recv())
 				event = Event(event_type = 'SinaLevel2WS', data = message)
 
 				for q in self._subscriber:
@@ -131,20 +131,17 @@ class SinaLevel2WSProducer(Producer):
 			except Exception as e:
 				self.logger.error("{},{}".format(e, threading.current_thread().name) )
 				ws.close()
-				for info in self.create_ws(qlist = qlist, symbolList = symbolList):
-					yield info
+				yield trollius.From(self.create_ws(qlist = qlist, symbolList = symbolList))
 
 	@trollius.coroutine
 	def renew_token(self, symbol):
 		try:
-			for response in self.get_ws_token( self.websockets[ symbol ]["qlist"] ):
-				yield response
+			response = yield trollius.From(self.get_ws_token( self.websockets[ symbol ]["qlist"] ))
 			if response["msg_code"] == 1:
 				token = response["result"]
 				self.websockets[ symbol ]["token"] = token
 				self.websockets[ symbol ]["renewed"] = datetime.now()
-				for info in self.websockets[ symbol ]["ws"].send("*"+token):
-					yield info
+				yield trollius.From(websockets[ symbol ]["ws"].send("*"+token))
 				self.websockets[ symbol ]["trialTime"] = 0
 			else:
 				self.websockets[ symbol ]["trialTime"] += 1
