@@ -174,7 +174,7 @@ class SinaVendor(Vendor):
 
     # sz,sh的时间戳不同，强烈建议分开调用
     # 如果开启split = True, 则会返回
-    def get_realtime_quotes(self, symbols = None, dataframe = True, loop = None, split = False):
+    def get_realtime_quotes(self, symbols = None, dataframe = False, loop = None, split = True):
         self.quote = None
         if symbols is None:
             symbols = self.symbols
@@ -195,8 +195,12 @@ class SinaVendor(Vendor):
             self.quote = self.quote.drop( 'ms', axis = 1 )
             self.quote.convert_objects(convert_dates=False,convert_numeric=True,convert_timedeltas=False)
         if split:
-            quote_sz = self.quote[ self.quote.symbol > 'sz' ]
-            quote_sh = self.quote[ self.quote.symbol < 'sz' ]
+            if dataframe:
+                quote_sz = self.quote[ self.quote.symbol > 'sz' ]
+                quote_sh = self.quote[ self.quote.symbol < 'sz' ]
+            else:
+                quote_sz = [x for x in self.quote if x[0][:2].lower()=='sz']
+                quote_sh = [x for x in self.quote if x[0][:2].lower()=='sh']
             return [ quote_sz, quote_sh ]
         return self.quote
 
@@ -244,6 +248,8 @@ class SinaVendor(Vendor):
             quote = DataFrame( quote, columns = SINA_QUOTE_COLUMNS )
             quote["symbol"] = symbolList
             quote["time"] = datetime.strptime( quote.iloc[0]["date"] + " " + quote.iloc[0]["time"] , '%Y-%m-%d %H:%M:%S')
+        else:
+            quote = [[x]+y for x,y in zip(symbolList,quote)]
         raise trollius.Return(quote)
 
     # 新浪获取当前全部股票的接口

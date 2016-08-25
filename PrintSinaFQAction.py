@@ -5,13 +5,13 @@ import re
 from datetime import datetime
 import threading
 
-class PrintSinaL2Action(Action):
+class PrintSinaFQAction(Action):
     def __init__(self, **kwargs):
         Action.__init__(self, **kwargs )
         self._producer_list = [
             {
-                 "name"             :    "SinaLevel2WS",
-                 "producer_name"    :    "PrintSinaL2.SinaLevel2-quotation"
+                 "name"             :    "SinaFreeQuote",
+                 "producer_name"    :    "PrintSinaFQ.SinaFreeQuote-quotation"
             }]
         self._init()
         self.logger.info(self._name +u"初始化")
@@ -23,9 +23,9 @@ class PrintSinaL2Action(Action):
         if isinstance(event.data, list):
             for data in event.data:
                 self.count += 1
-                print("PrintSinaL2:{}, \nCount:{},  Length: {}\n{}".format( dt,self.count, len(data),data ) )
+                print("PrintSinaFQ:{}, \nCount:{},  Length: {}\n{}".format( dt,self.count, len(data),data ) )
         else:
             self.count += 1
-            print("PrintSinaL2:{}, \nCount:{},  Length: {}\n{}".format( dt,self.count, len(event.data),event.data ) )
+            print("PrintSinaFQ:{}, \nCount:{},  Length: {}\n{}".format( dt,self.count, len(event.data),event.data ) )
 
         # self.logger.info("线程退出")
